@@ -2,7 +2,7 @@
 #include <OneWire.h> 
 #include <DallasTemperature.h>
 
-//Piny pripojenia zariadeni
+//Piny pripojenia zariadeni, mozne upravit podla zapojenia
 #define TEPLOMER 2
 #define MOTOR1 4
 #define MOTOR2 6
@@ -18,7 +18,7 @@ OneWire oneWire(TEPLOMER);
 DallasTemperature sensors(&oneWire);
 float Celsius = 0;
 
-//SIGNALY PRE POHYB MOTORA2 - potrebne upravit podla konkretneho motora
+//SIGNALY PRE POHYB MOTORA1,2 - STOP, FRONT, FRONT1, BACK, BACK1 - potrebne upravit podla konkretneho motora, urcuju rychlost a smer motoru
 int STOP = 88;
 int FRONT = 115;
 int BACK = 65;
@@ -37,7 +37,7 @@ void setup() {
   sensors.begin(); 
   //Nastavenie rele pre pumpu
   pinMode(8, OUTPUT);
-  //nastavenie motorov do zastavenej polohy
+  //pripojenie motorov a nastavenie motorov do zastavenej polohy
   motor1.attach(4);
   motor2.attach(6);
   motor1.write(STOP);
@@ -65,6 +65,7 @@ void loop() {
   //Zisti teplotu v skleniku
   sensors.requestTemperatures();
   Celsius = sensors.getTempCByIndex(0);
+  //Vypis teplotu
   Serial.print("TEPLOTA:");
   Serial.print(Celsius);
   Serial.print("°C\n");
@@ -97,6 +98,7 @@ void loop() {
   if(zatvorit){
     motor1.write(BACK);
     if(prva_otocka){
+      //delay je kvoli tomu, ze jedna cast strechy prekryva druhu, prekryvajuca cast sa musi zatvorit az po tej druhej
       delay(1000);
       prva_otocka = false;
     }
