@@ -18,12 +18,14 @@ OneWire oneWire(TEPLOMER);
 DallasTemperature sensors(&oneWire);
 float Celsius = 0;
 
-//SIGNALY PRE POHYB MOTORA - potrebne upravit podla konkretneho motora
+//SIGNALY PRE POHYB MOTORA2 - potrebne upravit podla konkretneho motora
 int STOP = 88;
-int FRONT = 98;
-int BACK = 79;
+int FRONT = 115;
+int BACK = 65;
+int FRONT2 = 110;
+int BACK2 = 63;
 int current = FRONT;
-int motor_cas = 30;
+int current2 = FRONT2;
 
 //VLHKOST
 int vlhkost = 0;
@@ -49,6 +51,11 @@ bool otvorit = false;
 bool otvorene = false;
 bool zatvorit = false;
 
+//casy otvarania a zatvarania sklenika - treba upravit podla velkosti sklennika a rychlosti motorov
+int motor_otvor_t = 6;
+int motor_zatvor_t = 5;
+bool prva_otocka;
+
 //Informacie o stave vlhkosti sklenika
 int poc_zal = 0;
 bool zalievanie = false;
@@ -58,24 +65,20 @@ void loop() {
   //Zisti teplotu v skleniku
   sensors.requestTemperatures();
   Celsius = sensors.getTempCByIndex(0);
+  Serial.print("TEPLOTA:");
   Serial.print(Celsius);
-  Serial.print("\n");
-  Serial.print(otvorene);
-  Serial.print("\n");
-  Serial.print(otvorit);
-  Serial.print("\n poc");
-  Serial.print(poc);
-  Serial.print("\n");
-  
+  Serial.print("°C\n");
+   
   //Ak je teplota nad 30st celzia a sklennik je zatvoreny, otvor ho
-  if(Celsius > 31 && !otvorene && !otvorit){
+  if(Celsius > 27 && !otvorene && !otvorit){
     Serial.print("OTVARAM\n");
     otvorit = true;
-    poc = motor_cas;
+    poc = motor_otvor_t;
+    prva_otocka = true;
   }
   if(otvorit){
     motor1.write(FRONT);
-    motor2.write(FRONT);
+    motor2.write(FRONT2);
     poc -= 1;
   }
   if(otvorit && poc == 0){
@@ -86,15 +89,18 @@ void loop() {
   }
 
   //Ak je teplota pod 30st celzia a sklnnik je otvoreny, zatvor ho
-  if(Celsius < 30 && otvorene && !zatvorit){
+  if(Celsius < 26.9 && otvorene && !zatvorit){
     Serial.print("ZATVARAM\n");
     zatvorit = true;
-    poc_zat = motor_cas;
+    poc_zat = motor_zatvor_t;
   }
   if(zatvorit){
-    Serial.print("ZATVARAM");
     motor1.write(BACK);
-    motor2.write(BACK);
+    if(prva_otocka){
+      delay(1000);
+      prva_otocka = false;
+    }
+    motor2.write(BACK2);
     poc_zat -= 1;
   }
   if(zatvorit && poc_zat == 0){
@@ -127,5 +133,4 @@ void loop() {
     vlhke = true;
     digitalWrite(8, LOW);
   }   
-  delay(100);           
 } 
